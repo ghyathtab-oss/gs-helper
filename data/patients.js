@@ -20,7 +20,7 @@ const patients = [
     age: "42",
     complaint: "ألم بطني حاد في الربع السفلي الأيمن",
     diagnosis: "التهاب الزائدة الدودية الحاد",
-    specialist: "د. غياث دحدوح",
+    specialist: "د. قصي أيوب",
     date: "2026-05-12"
   },
   {
@@ -31,7 +31,7 @@ const patients = [
     age: "55",
     complaint: "ألم في المراق الأيمن بعد الوجبات الدسمة",
     diagnosis: "التهاب المرارة بالحصيات",
-    specialist: "د. فاطمة كادك",
+    specialist: "د. أحمد الحاج",
     date: "2026-05-20"
   },
   {
@@ -42,7 +42,7 @@ const patients = [
     age: "37",
     complaint: "كتلة إربية يمنى تزداد عند الجهد",
     diagnosis: "فتق إربي غير مختنق",
-    specialist: "د. يحيى أبوبكر",
+    specialist: "د. عمار نيازي",
     date: "2026-06-02"
   }
 ];
