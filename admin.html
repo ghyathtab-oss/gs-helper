@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>لوحة التحكم – GS Helper</title>
+  <meta name="description" content="لوحة تحكم المشرف لإدارة نظام مساعدة الجراح." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header id="app-header"></header>
+  <main class="container">
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>إحصائيات</span></div>
+      <div class="stats">
+        <div class="stat"><div class="num" id="statPatients">0</div><div class="lbl">عدد المرضى</div></div>
+        <div class="stat"><div class="num" id="statResidents">0</div><div class="lbl">عدد المقيمين</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>آخر 10 مرضى</span></div>
+      <div id="latestList"></div>
+      <div class="empty" id="latestEmpty" style="display:none;">الأرشيف فارغ</div>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>إدارة كلمات السر</span></div>
+      <label for="newGatePass">كلمة سر الدخول إلى الموقع</label>
+      <input type="text" id="newGatePass" placeholder="الكلمة الحالية: gs" />
+      <button class="btn btn-sm" id="saveGatePass" style="width:100%">تغيير كلمة سر الدخول</button>
+
+      <label for="newArchivePass" style="margin-top:18px">كلمة سر تحميل الأرشيف</label>
+      <input type="text" id="newArchivePass" placeholder="الكلمة الحالية: ghyath021" />
+      <button class="btn btn-sm" id="saveArchivePass" style="width:100%">تغيير كلمة سر التحميل</button>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>أدوات النظام</span></div>
+      <button class="btn btn-ghost" id="refreshResidents"></button>
+      <button class="btn btn-ghost" id="exportJs"></button>
+      <button class="btn btn-danger" id="logoutBtn2"></button>
+    </section>
+  </main>
+  <nav id="bottom-nav"></nav>
+
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="data/residents.js"></script>
+  <script src="data/patients.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

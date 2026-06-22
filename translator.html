@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>المترجم الطبي – GS Helper</title>
+  <meta name="description" content="مترجم طبي هجين: قاموس محلي مع روابط بحث طبي خارجية." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header id="app-header"></header>
+  <main class="container">
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>المترجم الطبي</span></div>
+      <p style="color:var(--text-muted); font-size:.9rem;">
+        ابحث عن مصطلح طبي بالإنجليزية أو العربية. إن لم يوجد في القاموس المحلي،
+        ستظهر روابط بحث طبي خارجية موثوقة.
+      </p>
+      <div class="search-wrap" id="searchIcon">
+        <input type="text" id="termInput" placeholder="مثال: Appendicitis أو التهاب الزائدة" />
+      </div>
+      <button class="btn" id="searchBtn">بحث</button>
+
+      <div class="translator-result" id="result"></div>
+    </section>
+  </main>
+  <nav id="bottom-nav"></nav>
+
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/translator.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>حول النظام – GS Helper</title>
+  <meta name="description" content="معلومات عن نظام مساعدة الجراح وفريق المقيمين حسب السنوات." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <header id="app-header"></header>
+  <main class="container">
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>حول النظام</span></div>
+      <p class="about-text">
+        <strong>GS Helper – نظام مساعدة الجراح</strong> هو نظام مخصص لقسم الجراحة العامة،
+        يجمع دليل المقيمين، وأرشيف المرضى، والمترجم الطبي في مكان واحد بسيط وسريع.
+        صُمّم ليعمل بالكامل على المتصفح ودون الحاجة إلى خادم خارجي، مع حفظ البيانات
+        بشكل دائم على جهاز المستخدم.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>معلومات النظام</span></div>
+      <div class="rows" id="infoRows">
+        <div class="row"><span class="k">القسم</span><span class="v">الجراحة العامة</span></div>
+        <div class="row"><span class="k">الإصدار</span><span class="v">1.0.0</span></div>
+        <div class="row"><span class="k">المنصة</span><span class="v">GitHub Pages</span></div>
+        <div class="row"><span class="k">التقنية</span><span class="v">HTML · CSS · JavaScript</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title"><span class="bar"></span><span>المقيمون حسب السنة</span></div>
+      <div id="pgyGroups"></div>
+    </section>
+  </main>
+  <nav id="bottom-nav"></nav>
+
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="data/residents.js"></script>
+  <script src="assets/js/about.js"></script>
+</body>
+</html>

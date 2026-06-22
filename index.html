@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>GS Helper – نظام مساعدة الجراح</title>
+  <meta name="description" content="نظام مساعدة الجراح: المقيمون، أرشيف المرضى، والمترجم الطبي - قسم الجراحة العامة." />
+  <meta name="theme-color" content="#0b1f3a" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- شاشة الدخول (البوابة + تسجيل دخول المقيمين) -->
+  <div class="login-screen" id="loginScreen" style="display:none;">
+    <div class="login-card">
+      <div class="logo" id="loginLogo"></div>
+      <h2>نظام مساعدة الجراح</h2>
+      <div class="sub">GS HELPER</div>
+
+      <!-- المرحلة 1: بوابة الموقع -->
+      <div id="stageGate">
+        <label for="gatePass">كلمة مرور الدخول إلى الموقع</label>
+        <input type="password" id="gatePass" placeholder="••" autocomplete="off" />
+        <button class="btn" id="gateBtn">دخول</button>
+        <div class="login-error" id="gateError">كلمة المرور غير صحيحة</div>
+      </div>
+
+      <!-- المرحلة 2: تسجيل دخول المقيم/المشرف -->
+      <div id="stageLogin" style="display:none;">
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" placeholder="مثال: pgy1 أو admin" autocomplete="username" />
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" placeholder="••••" autocomplete="current-password" />
+        <button class="btn" id="loginBtn">تسجيل الدخول</button>
+        <div class="login-error" id="loginError">اسم المستخدم أو كلمة المرور غير صحيحة</div>
+        <p class="hint" style="color:#9ec1ff;">حسابات تجريبية: pgy1 / 1234 — admin / ghyath</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- التطبيق -->
+  <div id="app" style="display:none;">
+    <header id="app-header"></header>
+    <main class="container">
+      <section class="card">
+        <div class="section-title"><span class="bar"></span><span id="welcomeText">مرحباً بك</span></div>
+        <p style="color:var(--text-muted); font-size:.92rem;">
+          نظام مساعدة الجراح لقسم الجراحة العامة — اختر القسم الذي تريد الوصول إليه.
+        </p>
+      </section>
+
+      <section class="tiles" id="homeTiles"></section>
+    </main>
+  </div>
+
+  <nav id="bottom-nav"></nav>
+
+  <script src="assets/js/users.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script>
+    (function () {
+      document.getElementById("loginLogo").innerHTML = ICONS.stethoscope;
+
+      function showApp() {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        GSUI.initPage({ id: "home", title: "نظام مساعدة الجراح" });
+        renderHome();
+      }
+      function showStageGate() {
+        document.getElementById("loginScreen").style.display = "grid";
+        document.getElementById("stageGate").style.display = "block";
+        document.getElementById("stageLogin").style.display = "none";
+        setTimeout(() => document.getElementById("gatePass").focus(), 100);
+      }
+      function showStageLogin() {
+        document.getElementById("loginScreen").style.display = "grid";
+        document.getElementById("stageGate").style.display = "none";
+        document.getElementById("stageLogin").style.display = "block";
+        setTimeout(() => document.getElementById("username").focus(), 100);
+      }
+
+      // تحديد المرحلة عند التحميل
+      if (!GS.isGateOpen()) showStageGate();
+      else if (!GS.isLoggedIn()) showStageLogin();
+      else showApp();
+
+      // المرحلة 1
+      const gateBtn = document.getElementById("gateBtn");
+      const gatePass = document.getElementById("gatePass");
+      function tryGate() {
+        const ok = GS.openGate(gatePass.value);
+        if (ok) { document.getElementById("gateError").classList.remove("show"); showStageLogin(); }
+        else { document.getElementById("gateError").classList.add("show"); gatePass.value = ""; gatePass.focus(); }
+      }
+      gateBtn.addEventListener("click", tryGate);
+      gatePass.addEventListener("keydown", e => { if (e.key === "Enter") tryGate(); });
+
+      // المرحلة 2
+      const loginBtn = document.getElementById("loginBtn");
+      const username = document.getElementById("username");
+      const password = document.getElementById("password");
+      function tryLogin() {
+        const s = GS.login(username.value, password.value);
+        if (s) { document.getElementById("loginError").classList.remove("show"); showApp(); }
+        else { document.getElementById("loginError").classList.add("show"); password.value = ""; password.focus(); }
+      }
+      loginBtn.addEventListener("click", tryLogin);
+      password.addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+
+      // كروت الصفحة الرئيسية
+      function renderHome() {
+        const s = GS.getSession();
+        document.getElementById("welcomeText").textContent =
+          "مرحباً، " + (s ? (s.name || s.username) : "زائر");
+
+        const tiles = [
+          { href: "residents.html",  icon: "users",     title: "المقيمون",      desc: "دليل المقيمين والتواصل" },
+          { href: "archive.html",    icon: "archive",   title: "أرشيف المرضى",  desc: "إضافة وبحث وحذف" },
+          { href: "translator.html", icon: "translate", title: "المترجم الطبي", desc: "قاموس هجين + بحث خارجي" },
+          { href: "about.html",      icon: "info",      title: "حول النظام",    desc: "معلومات وفريق العمل" }
+        ];
+        if (GS.isAdmin()) {
+          tiles.push({ href: "admin.html", icon: "shield", title: "لوحة التحكم", desc: "إدارة النظام (مشرف)" });
+        }
+        document.getElementById("homeTiles").innerHTML = tiles.map(t => `
+          <a class="tile" href="${t.href}">
+            <span class="ico">${ICONS[t.icon]}</span>
+            <h3>${t.title}</h3>
+            <p>${t.desc}</p>
+          </a>`).join("");
+      }
+    })();
+  </script>
+</body>
+</html>
