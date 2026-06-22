@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>حول النظام – GS Helper</title>
+  <meta name="theme-color" content="#1e3a8a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body data-page="about">
+  <div id="header"></div>
+  <main class="app">
+
+    <section class="card">
+      <div class="card-title">حول النظام</div>
+      <p class="card-sub" style="font-size:0.95rem;line-height:1.9;">
+        تم الإنشاء في سنة 2026 بواسطة فريق الجراحة العامة في مشفى حلب الجامعي.
+        هذه الصفحة ثابتة ولا تتغير مع تبدّل المناوبين.
+      </p>
+    </section>
+
+    <section class="card">
+      <div class="card-title">فريق الجراحة العامة</div>
+      <div id="aboutTeam"></div>
+    </section>
+
+  </main>
+  <script src="assets/js/common.js"></script>
+  <script src="assets/js/about.js"></script>
+</body>
+</html>

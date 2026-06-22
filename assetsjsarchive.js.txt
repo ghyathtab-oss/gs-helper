@@ -1,0 +1,303 @@
+/* ===== Archive page ===== */
+const STORE_KEY = "gs_helper_patients";
+const EXPORT_PASSWORD = "ghyath0";
+
+/* ── عدّل هذه القيم بمعلومات مستودعك على GitHub ── */
+const GH = {
+  owner: "ghyathtab-oss",   // ← اسم مستخدمك في GitHub
+  repo:  "gs-helper",       // ← اسم المستودع
+  branch: "main",
+  path:     "patients.xlsx",
+  jsonPath: "patients.json"
+};
+const GH_TOKEN_KEY = "gs_helper_gh_token";
+
+/* ---------- LocalStorage helpers ---------- */
+function loadPatients() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch { return []; }
+}
+function savePatients(list) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(list));
+}
+
+/* ---------- Copy to clipboard ---------- */
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    toast("تم نسخ بيانات المريض ✅", "success");
+  }).catch(() => {
+    const t = document.createElement("textarea");
+    t.value = text;
+    document.body.appendChild(t);
+    t.select();
+    try { document.execCommand("copy"); toast("تم النسخ ✅", "success"); }
+    catch { toast("تعذّر النسخ", "error"); }
+    t.remove();
+  });
+}
+
+function patientCopyString(p) {
+  return `اسم المريض: ${p.name || ""}
+رقم الملف: ${p.file || ""}
+رقم الهاتف: ${p.phone || ""}
+العمر: ${p.age || ""}
+الشكاية: ${p.complaint || ""}
+التشخيص: ${p.diagnosis || ""}
+اسم الأخصائي: ${p.specialist || ""}
+تاريخ الزيارة: ${p.date || ""}`;
+}
+
+/* ---------- Render archive results ---------- */
+function renderResults(list) {
+  const host = document.getElementById("archiveResults");
+  if (!list.length) {
+    host.innerHTML = `<div class="empty">لا توجد نتائج</div>`;
+    return;
+  }
+  host.innerHTML = list.map((p, i) => `
+    <div class="patient-card">
+      <h3>${p.name || "—"}</h3>
+      <div class="row"><span class="k">رقم الملف</span><span class="v">${p.file || "—"}</span></div>
+      <div class="row"><span class="k">رقم الهاتف</span><span class="v">${p.phone || "—"}</span></div>
+      <div class="row"><span class="k">العمر</span><span class="v">${p.age || "—"}</span></div>
+      <div class="row"><span class="k">الشكاية</span><span class="v">${p.complaint || "—"}</span></div>
+      <div class="row"><span class="k">التشخيص</span><span class="v">${p.diagnosis || "—"}</span></div>
+      <div class="row"><span class="k">الأخصائي</span><span class="v">${p.specialist || "—"}</span></div>
+      <div class="row"><span class="k">تاريخ الزيارة</span><span class="v">${p.date || "—"}</span></div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-sm btn-green" data-copy="${i}">📋 نسخ بيانات المريض</button>
+        <button class="btn btn-sm btn-gray"  data-del="${i}">🗑️ حذف</button>
+      </div>
+    </div>`).join("");
+
+  host.querySelectorAll("[data-copy]").forEach(b => {
+    b.addEventListener("click", () => copyText(patientCopyString(list[+b.dataset.copy])));
+  });
+  host.querySelectorAll("[data-del]").forEach(b => {
+    b.addEventListener("click", () => deletePatient(list[+b.dataset.del]));
+  });
+}
+
+let CURRENT_FILTER = "";
+function refresh() {
+  const all = loadPatients();
+  const q   = CURRENT_FILTER.trim().toLowerCase();
+  const list = q
+    ? all.filter(p => [p.name, p.file, p.phone, p.diagnosis, p.complaint, p.specialist]
+        .some(v => String(v || "").toLowerCase().includes(q)))
+    : all;
+  renderResults(list);
+}
+
+function deletePatient(target) {
+  const all = loadPatients();
+  const idx = all.findIndex(p => p._id === target._id);
+  if (idx > -1) {
+    all.splice(idx, 1);
+    savePatients(all);
+    refresh();
+    toast("تم حذف المريض", "");
+    syncToGithub(true);
+  }
+}
+
+/* ---------- Save patient ---------- */
+function handleSave(e) {
+  e.preventDefault();
+  const p = {
+    _id:        Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name:       val("p_name"),
+    file:       val("p_file"),
+    phone:      val("p_phone"),
+    age:        val("p_age"),
+    complaint:  val("p_complaint"),
+    diagnosis:  val("p_diagnosis"),
+    specialist: val("p_specialist"),
+    date:       val("p_date") || new Date().toISOString().slice(0, 10)
+  };
+  if (!p.name) { toast("الرجاء إدخال اسم المريض", "error"); return; }
+  const all = loadPatients();
+  all.unshift(p);
+  savePatients(all);
+  document.getElementById("patientForm").reset();
+  refresh();
+  toast("تم حفظ المريض في الأرشيف الدائم ✅", "success");
+  syncToGithub(true); // رفع تلقائي صامت
+}
+function val(id) { return document.getElementById(id).value.trim(); }
+
+/* ---------- Build Excel workbook ---------- */
+function buildWorkbook() {
+  const all    = loadPatients();
+  const header = ["اسم المريض","رقم الملف","رقم الهاتف","العمر",
+                  "الشكاية","التشخيص","اسم الأخصائي","تاريخ الزيارة"];
+  const rows   = all.map(p =>
+    [p.name, p.file, p.phone, p.age, p.complaint, p.diagnosis, p.specialist, p.date]);
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws["!cols"] = header.map(() => ({ wch: 20 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Patients");
+  return wb;
+}
+
+/* ---------- Export with password ---------- */
+function openExportModal() {
+  const m = document.createElement("div");
+  m.className = "modal-backdrop";
+  m.innerHTML = `
+    <div class="modal-box">
+      <h3>تحميل الأرشيف</h3>
+      <p>أدخل كلمة سر التحميل للمتابعة.</p>
+      <input type="password" id="exPass" class="input" placeholder="كلمة السر" />
+      <div id="exErr" style="color:#dc2626;font-size:0.8rem;margin-top:8px;font-weight:700;display:none;">
+        كلمة السر خاطئة
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-gray btn-sm" style="flex:1" id="exCancel">إلغاء</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" id="exOk">تحميل</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  const pass = m.querySelector("#exPass");
+  const err  = m.querySelector("#exErr");
+  pass.focus();
+  m.querySelector("#exCancel").onclick = () => m.remove();
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+  function go() {
+    if (pass.value.trim() === EXPORT_PASSWORD) {
+      XLSX.writeFile(buildWorkbook(), "patients.xlsx");
+      m.remove();
+      toast("تم تحميل الأرشيف ✅", "success");
+    } else {
+      err.style.display = "block";
+      pass.value = ""; pass.focus();
+    }
+  }
+  m.querySelector("#exOk").onclick = go;
+  pass.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+}
+
+/* ---------- GitHub sync helpers ---------- */
+function getToken() { return localStorage.getItem(GH_TOKEN_KEY) || ""; }
+
+function b64(arrBuf) {
+  let binary = "";
+  const bytes = new Uint8Array(arrBuf);
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk)
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  return btoa(binary);
+}
+function b64utf8(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+async function ghGetSha(path, token) {
+  try {
+    const r = await fetch(
+      `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+      { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" } }
+    );
+    if (r.ok) { const j = await r.json(); return j.sha; }
+  } catch {}
+  return undefined;
+}
+
+async function ghPut(path, contentB64, message, token) {
+  const sha  = await ghGetSha(path, token);
+  const body = { message, content: contentB64, branch: GH.branch };
+  if (sha) body.sha = sha;
+  const r = await fetch(
+    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    }
+  );
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+/* ---------- Main sync function ---------- */
+async function syncToGithub(silent) {
+  const token = getToken();
+  if (!token) { if (!silent) promptToken(); return; }
+  try {
+    if (!silent) toast("جارٍ الرفع إلى GitHub...", "");
+    // 1) رفع patients.json
+    await ghPut(GH.jsonPath, b64utf8(JSON.stringify(loadPatients(), null, 2)),
+      "Update patients.json", token);
+    // 2) رفع patients.xlsx
+    const wbout = XLSX.write(buildWorkbook(), { bookType: "xlsx", type: "array" });
+    await ghPut(GH.path, b64(wbout), "Update patients.xlsx", token);
+    if (!silent) toast("تم الرفع والمزامنة مع GitHub ✅", "success");
+  } catch (err) {
+    if (!silent) toast("فشل الرفع — تحقق من التوكن والصلاحيات", "error");
+    console.error("GitHub sync error:", err);
+  }
+}
+
+/* ---------- Token prompt modal ---------- */
+function promptToken() {
+  const m = document.createElement("div");
+  m.className = "modal-backdrop";
+  m.innerHTML = `
+    <div class="modal-box">
+      <h3>ربط GitHub</h3>
+      <p>
+        لتفعيل الأرشيف الدائم على السحابة، أدخل<br/>
+        <strong>GitHub Personal Access Token</strong><br/>
+        (بصلاحية <code>repo</code>). يُحفظ محلياً في متصفحك فقط.
+      </p>
+      <input type="password" id="tok" class="input" placeholder="ghp_xxxxxxxxxxxx" />
+      <div class="modal-actions">
+        <button class="btn btn-gray btn-sm" style="flex:1" id="tCancel">إلغاء</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" id="tOk">حفظ ومزامنة</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  const tok = m.querySelector("#tok");
+  tok.focus();
+  m.querySelector("#tCancel").onclick = () => m.remove();
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+  m.querySelector("#tOk").onclick = () => {
+    const v = tok.value.trim();
+    if (!v) { toast("أدخل التوكن أولاً", "error"); return; }
+    localStorage.setItem(GH_TOKEN_KEY, v);
+    m.remove();
+    syncToGithub(false);
+  };
+}
+
+/* ---------- Bootstrap: load from patients.json on first open ---------- */
+async function bootstrapFromRepo() {
+  if (loadPatients().length) return;
+  try {
+    const r = await fetch("patients.json", { cache: "no-store" });
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length) {
+        savePatients(data.map(p => ({
+          _id: p._id || Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          ...p
+        })));
+      }
+    }
+  } catch {}
+}
+
+/* ---------- DOMContentLoaded ---------- */
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("patientForm").addEventListener("submit", handleSave);
+  document.getElementById("searchArchive").addEventListener("input", (e) => {
+    CURRENT_FILTER = e.target.value;
+    refresh();
+  });
+  document.getElementById("exportBtn").addEventListener("click", openExportModal);
+  document.getElementById("githubBtn").addEventListener("click", () => syncToGithub(false));
+  await bootstrapFromRepo();
+  refresh();
+});
